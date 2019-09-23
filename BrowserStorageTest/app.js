@@ -1,3 +1,4 @@
+/* LocalStorageを使う方法 */
 /*window.onload = () => {
     let storage = window.localStorage;
     let greeter: IGreeter = new StorageGreeter(storage);
@@ -11,6 +12,7 @@
         alert('キャッシュをクリアしました');
     };
 };*/
+/* IndexedDBを使う方法 */
 window.onload = () => {
     // データベースの接続を開く
     let indexedDb = window.indexedDB;
@@ -56,7 +58,7 @@ class IndexedDBGreeter {
                 resolve(event.target.result);
             };
             req.onerror = (event) => {
-                reject(`ErrorCode : ${event.target.errorCode}`);
+                reject(event.target.error);
             };
         });
     }
@@ -68,7 +70,7 @@ class IndexedDBGreeter {
                 resolve(event.target.result);
             };
             req.onerror = (event) => {
-                reject(`ErrorCode : ${event.target.errorCode}`);
+                reject(event.target.error);
             };
         });
     }
