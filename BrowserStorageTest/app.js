@@ -15,35 +15,38 @@
 /* IndexedDBを使う方法 */
 window.onload = () => {
     // データベースの接続を開く
-    let indexedDb = window.indexedDB;
-    let openReq = new Promise((resolve, reject) => {
-        let req = indexedDb.open('GreeterDB', 1);
-        req.onsuccess = (event) => {
-            resolve(event.target.result);
+    let dbFactory = window.indexedDB;
+    let req = dbFactory.open('GreeterDB', 1);
+    req.onsuccess = (event) => {
+        let db = event.target.result;
+        let greetFn = () => {
+            // GreeterSettingというデータベースに対して、読み書き可能なトランザクションを開始する
+            let tran = db.transaction(['GreeterSetting'], 'readwrite');
+            // オブジェクトストア(RDBMSでいう、テーブル相当。ただしデータは表構造ではなくオブジェクト構造。)
+            let objStore = tran.objectStore('GreeterSetting');
+            // オブジェクトストアのデータを基に、挨拶する
+            new IndexedDBGreeter(objStore).Greet();
         };
-        req.onerror = (event) => {
-            reject(`Database error : ${event.target.errorCode}`);
-        };
-        req.onupgradeneeded = (event) => {
-            let db = event.target.result;
-            db.createObjectStore('GreeterSetting');
-        };
-    });
-    // トランザクションを開いて、IndextedDBのデータを基に挨拶する
-    openReq.then(db => {
-        let tran = db.transaction(['GreeterSetting'], 'readwrite');
-        let objStore = tran.objectStore('GreeterSetting');
-        new IndexedDBGreeter(objStore).Greet();
-    });
-    // トランザクションを開いて、IndextedDBのデータをすべてクリアする
-    let btnCacheClear = document.getElementById('btnCacheClear');
-    btnCacheClear.onclick = () => {
-        openReq.then(db => {
+        let cacheClearFn = () => {
+            // 上で用意したトランザクションはスコープ外で消えてしまうので、ボタン押下したときは都度トランザクションを開始する
             let tran = db.transaction(['GreeterSetting'], 'readwrite');
             let objStore = tran.objectStore('GreeterSetting');
+            // オブジェクトストアの中身をすべてクリアする
             objStore.clear();
             alert('キャッシュをクリアしました');
-        });
+        };
+        // ページの読み込みができたら、あいさつする
+        greetFn();
+        // キャッシュクリアボタンを押下したときは、キャッシュクリアする
+        let btnCacheClear = document.getElementById('btnCacheClear');
+        btnCacheClear.onclick = cacheClearFn;
+    };
+    req.onerror = (event) => {
+        console.error(event.target.error);
+    };
+    req.onupgradeneeded = (event) => {
+        let db = event.target.result;
+        db.createObjectStore('GreeterSetting');
     };
 };
 class IndexedDBGreeter {
