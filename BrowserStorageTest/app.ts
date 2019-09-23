@@ -34,7 +34,7 @@ window.onload = () => {
         };
 
         let cacheClearFn = () => {
-            // 上で用意したトランザクションはスコープ外で消えてしまうので、ボタン押下したときは都度トランザクションを開始する
+            // GreeterSettingというデータベースに対して、読み書き可能なトランザクションを開始する
             let tran = db.transaction(['GreeterSetting'], 'readwrite');
             let objStore = tran.objectStore('GreeterSetting');
 
